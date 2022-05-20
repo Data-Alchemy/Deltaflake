@@ -1,2 +1,2 @@
 # Deltaflake
-This is a CICD pipeline to enable Databricks to manage Snowflake. Allowing data transfers and providing a pipeline framework.
+This repo enables you to manage your Snowflake instance through Databricks. You can transfer data back and forth as well as make your Snowflake processes Devops Compliant.
