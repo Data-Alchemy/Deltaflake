@@ -1,0 +1,74 @@
+import snowflake.connector
+from snowflake.connector.pandas_tools import write_pandas
+from snowflake.connector.pandas_tools import pd_writer
+import pandas as pd
+import os
+import datetime
+import re
+
+###########################################################################
+########################## Pandas Settings ################################
+pd.set_option('display.max_rows', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth',None)
+###########################################################################
+
+
+
+class Snowpipe_Connector():
+    '''
+    This class allows you to interface with snowflake using the base python connector enabling you to control Snowflake via python.
+    It is not recommended to transfer data via this method, but instead meant to manage your Snowflake pipelines and logic
+    '''
+    def __init__(self,org,warehouse,usr,pwd,role,database,schema=None):
+        self.org            = org
+        self.warehouse      = warehouse
+        self.usr            = usr
+        self.pwd            = pwd
+        self.role           = role
+        self.database       = database
+        self.schema         = schema
+
+    @property
+    def Validate_Parms(self):
+         return {'org'              : self.org,
+                 'usr'              : self.usr,
+                 'warehouse'        : self.warehouse,
+                 'pwd'              : self.pwd,
+                 'role'             : self.role,
+                 'database'         : self.database,
+                 'schema'           : self.schema,
+                 }
+    @property
+    def Connection_Cursor(self) -> snowflake.connector.connect:
+        try:
+            ctx = snowflake.connector.connect(
+                user        =self.usr,
+                password    =self.pwd,
+                account     =self.org
+            )
+            return ctx
+        except Exception as e:
+            raise ValueError(f"connection to Snowflake failed \n Error received: {e} \n check that your parms are correct: {Validate_Parms}")
+    
+    def Execute_Query(self,statement:str) -> str:
+        
+        self.statement = statement
+        
+        try:
+            self.query = self.Connection_Cursor.execute_string(f"""
+                                            USE ROLE {self.role};
+                                            USE DATABASE {self.database};
+                                            USE SCHEMA {self.schema};
+                                            {self.statement};""")
+            for c in self.query:
+                            for row in c:
+                                print(row)
+     
+        except Exception as e:
+        
+            raise ValueError(f"Snowflake query failed \n Error received: {e} \n Query statment executed was : {self.statement}")
+
+# sample usage 
+#SnowPipe(org='',usr='',pwd='',role="",database="",schema="",warehouse="").Execute_Query('insert query statement here')
